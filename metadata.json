@@ -1,0 +1,6 @@
+{
+  "name": "Recruitment Sandbox",
+  "description": "Generate professional LinkedIn job descriptions and 10 targeted behavioral interview questions from raw hiring notes, complete with an interactive AI recruiter assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
