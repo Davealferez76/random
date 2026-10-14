@@ -19,6 +19,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+import com.example.data.repository.FirestoreRecruitmentRepository
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.auth
+
 data class RecruitmentUiState(
     val rawNotes: String = "",
     val roleLevel: String = "Senior (5+ yrs)",
@@ -35,12 +40,14 @@ data class RecruitmentUiState(
     val chatModel: GeminiModelOption = GeminiModelOption.FLASH_38,
     val chatEnableThinking: Boolean = false,
     val snackbarMessage: String? = null,
-    val isApiKeyConfigured: Boolean = false
+    val isApiKeyConfigured: Boolean = false,
+    val currentUser: FirebaseUser? = null
 )
 
 class RecruitmentViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: RecruitmentRepository
+    private val firestoreRepo: FirestoreRecruitmentRepository
     private val _uiState = MutableStateFlow(RecruitmentUiState())
     val uiState: StateFlow<RecruitmentUiState> = _uiState.asStateFlow()
 
@@ -49,11 +56,13 @@ class RecruitmentViewModel(application: Application) : AndroidViewModel(applicat
     init {
         val db = AppDatabase.getDatabase(application)
         repository = RecruitmentRepository(db.recruitmentDao())
+        firestoreRepo = FirestoreRecruitmentRepository(application)
         savedPacks = repository.savedPacks.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             emptyList()
         )
+
 
         // Seed with a rich default template so user can immediately see and generate
         val defaultNotes = """
@@ -155,6 +164,11 @@ class RecruitmentViewModel(application: Application) : AndroidViewModel(applicat
                         activeTab = 1, // Navigate directly to LinkedIn JD
                         snackbarMessage = "Generated LinkedIn JD & 10-Question Guide successfully!"
                     )
+                    viewModelScope.launch {
+                        if (Firebase.auth.currentUser != null) {
+                            firestoreRepo.savePack(pack)
+                        }
+                    }
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
@@ -175,6 +189,9 @@ class RecruitmentViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.value = _uiState.value.copy(currentPack = updatedPack)
         viewModelScope.launch {
             repository.savePack(updatedPack)
+            if (Firebase.auth.currentUser != null) {
+                firestoreRepo.savePack(updatedPack)
+            }
         }
     }
 
@@ -187,6 +204,9 @@ class RecruitmentViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.value = _uiState.value.copy(currentPack = updatedPack)
         viewModelScope.launch {
             repository.savePack(updatedPack)
+            if (Firebase.auth.currentUser != null) {
+                firestoreRepo.savePack(updatedPack)
+            }
         }
     }
 
@@ -200,6 +220,9 @@ class RecruitmentViewModel(application: Application) : AndroidViewModel(applicat
         )
         viewModelScope.launch {
             repository.savePack(updatedPack)
+            if (Firebase.auth.currentUser != null) {
+                firestoreRepo.savePack(updatedPack)
+            }
         }
     }
 
@@ -280,6 +303,9 @@ class RecruitmentViewModel(application: Application) : AndroidViewModel(applicat
     fun deleteSavedPack(packId: String) {
         viewModelScope.launch {
             repository.deletePack(packId)
+            if (Firebase.auth.currentUser != null) {
+                firestoreRepo.deletePack(packId)
+            }
             if (_uiState.value.currentPack?.id == packId) {
                 _uiState.value = _uiState.value.copy(currentPack = null)
             }
@@ -287,7 +313,16 @@ class RecruitmentViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun refreshAuthUser() {
+        val user = Firebase.auth.currentUser
+        _uiState.value = _uiState.value.copy(
+            currentUser = user,
+            snackbarMessage = if (user != null) "Signed in as ${user.displayName ?: user.email}" else "Signed out"
+        )
+    }
+
     fun clearSnackbar() {
         _uiState.value = _uiState.value.copy(snackbarMessage = null)
     }
 }
+

@@ -57,6 +57,8 @@ import com.example.ui.theme.GoldStar
 import com.example.ui.theme.TalentBlue
 import com.example.ui.theme.TalentBlueLight
 
+import com.example.ui.auth.CloudSyncStatusCard
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RoleNotesInputSection(
@@ -68,6 +70,7 @@ fun RoleNotesInputSection(
     onToggleThinking: (Boolean) -> Unit,
     onSelectTemplate: (String, String, String, String) -> Unit,
     onGenerate: () -> Unit,
+    onAuthChanged: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -119,6 +122,13 @@ fun RoleNotesInputSection(
                 }
             }
         }
+
+        // Firebase Cloud Sync Status Card
+        CloudSyncStatusCard(
+            onSignInSuccess = onAuthChanged,
+            onSignOutSuccess = onAuthChanged,
+            onError = { /* handled in helper */ }
+        )
 
         // Quick Role Templates
         Text(

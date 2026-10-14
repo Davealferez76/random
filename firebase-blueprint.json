@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "RecruitmentPack": {
+      "title": "RecruitmentPack",
+      "description": "A generated recruitment pack consisting of a LinkedIn Job Description and 10 targeted behavioral interview questions.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the recruitment pack."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the owner recruiter user."
+        },
+        "roleTitle": {
+          "type": "string",
+          "description": "Title of the job requisition."
+        },
+        "department": {
+          "type": "string",
+          "description": "Department or function for the role."
+        },
+        "experienceLevel": {
+          "type": "string",
+          "description": "Target experience level (e.g., Senior 5+ yrs)."
+        },
+        "rawNotes": {
+          "type": "string",
+          "description": "Raw unformatted hiring notes entered by the user."
+        },
+        "jdTitle": {
+          "type": "string",
+          "description": "Job title formatted for the JD."
+        },
+        "jdHeadline": {
+          "type": "string",
+          "description": "Catchy headline with emojis for LinkedIn."
+        },
+        "jdAbout": {
+          "type": "string",
+          "description": "About the role summary paragraph."
+        },
+        "jdResponsibilities": {
+          "type": "array",
+          "description": "List of responsibilities."
+        },
+        "jdHardSkills": {
+          "type": "array",
+          "description": "List of technical and hard skills."
+        },
+        "jdSoftSkills": {
+          "type": "array",
+          "description": "List of soft skills and leadership competencies."
+        },
+        "jdPerks": {
+          "type": "array",
+          "description": "List of benefits and perks."
+        },
+        "jdHashtags": {
+          "type": "array",
+          "description": "List of hashtags for LinkedIn posting."
+        },
+        "jdRawFormattedText": {
+          "type": "string",
+          "description": "Complete formatted LinkedIn post text."
+        },
+        "questions": {
+          "type": "array",
+          "description": "10 behavioral interview questions targeting the JD skills."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "roleTitle",
+        "department",
+        "experienceLevel",
+        "rawNotes",
+        "jdHeadline",
+        "jdAbout",
+        "jdRawFormattedText",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/recruitment_packs/{packId}": {
+      "schema": "RecruitmentPack",
+      "description": "Stores user's generated recruitment sandbox packages with LinkedIn JDs and 10-question interview guides."
+    }
+  }
+}

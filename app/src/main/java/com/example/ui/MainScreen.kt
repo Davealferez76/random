@@ -225,7 +225,8 @@ fun MainScreen(
                     onSelectTemplate = { title, notes, level, tone ->
                         viewModel.setTemplate(title, notes, level, tone)
                     },
-                    onGenerate = { viewModel.generatePack() }
+                    onGenerate = { viewModel.generatePack() },
+                    onAuthChanged = { viewModel.refreshAuthUser() }
                 )
                 1 -> JobDescriptionView(
                     jobDescription = uiState.currentPack?.jobDescription,

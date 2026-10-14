@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidRecruitmentPack(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.roleTitle is string && data.roleTitle.size() <= 200 &&
+             data.department is string && data.department.size() <= 100 &&
+             data.experienceLevel is string && data.experienceLevel.size() <= 100 &&
+             data.rawNotes is string && data.rawNotes.size() <= 10000 &&
+             data.jdHeadline is string && data.jdHeadline.size() <= 500 &&
+             data.jdAbout is string && data.jdAbout.size() <= 5000 &&
+             data.jdRawFormattedText is string && data.jdRawFormattedText.size() <= 20000 &&
+             (!('jdResponsibilities' in data) || (data.jdResponsibilities is list && data.jdResponsibilities.size() <= 50)) &&
+             (!('jdHardSkills' in data) || (data.jdHardSkills is list && data.jdHardSkills.size() <= 50)) &&
+             (!('jdSoftSkills' in data) || (data.jdSoftSkills is list && data.jdSoftSkills.size() <= 50)) &&
+             (!('jdPerks' in data) || (data.jdPerks is list && data.jdPerks.size() <= 50)) &&
+             (!('jdHashtags' in data) || (data.jdHashtags is list && data.jdHashtags.size() <= 50)) &&
+             (!('questions' in data) || (data.questions is list && data.questions.size() <= 20));
+    }
+
+    match /users/{userId}/recruitment_packs/{packId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       isValidId(packId) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidRecruitmentPack(incoming());
+
+      allow update: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidRecruitmentPack(incoming());
+
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+  }
+}
